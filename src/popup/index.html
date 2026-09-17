@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>二维码文件快传</title>
+  <script type="module" crossorigin src="../../assets/popup.js"></script>
+  <link rel="modulepreload" crossorigin href="../../assets/raptorq_wasm.js">
+  <link rel="stylesheet" crossorigin href="../../assets/popup.css">
+</head>
+<body>
+  <div class="app-layout">
+    <header class="app-header">
+      <div class="brand">
+        <h1>二维码文件快传</h1>
+        <span class="version-tag">离线极速版</span>
+      </div>
+    </header>
+
+    <div class="card step-card">
+      <div class="step-label">1. 手机扫码进入接收端</div>
+      <div class="entry-qr-box">
+        <canvas id="entry-qr-canvas" width="130" height="130"></canvas>
+      </div>
+      <div class="entry-desc">使用手机自带相机或浏览器扫码直达接收页</div>
+    </div>
+
+    <div class="card step-card">
+      <div class="step-label">2. 选择文件开始传输</div>
+      <div class="file-action">
+        <input type="file" id="file-uploader" class="file-input" />
+      </div>
+
+      <div class="transfer-info" id="transfer-info">等待选择文件...</div>
+
+      <div class="canvas-viewport">
+        <canvas id="stage-canvas" width="280" height="280"></canvas>
+      </div>
+
+      <div class="tuning-row">
+        <span>播放帧率: <strong id="fps-indicator">30</strong> FPS</span>
+        <input type="range" id="fps-controller" min="15" max="60" value="30" step="5" />
+      </div>
+    </div>
+
+    <footer class="legal-footer">
+      <span>Powered by open source </span>
+      <a href="https://github.com/infrost/RaptorQR" target="_blank" rel="noopener noreferrer">RaptorQR</a>
+    </footer>
+  </div>
+
+</body>
+</html>

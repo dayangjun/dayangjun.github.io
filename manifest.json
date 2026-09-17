@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "二维码文件快传",
+  "short_name": "快传",
+  "version": "1.0.0",
+  "description": "通过动态高速二维码流，将电脑文件离线传输给手机。纯本地运行，隐私零泄露。",
+  "action": {
+    "default_popup": "src/popup/index.html",
+    "default_title": "二维码文件快传"
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self';"
+  }
+}
