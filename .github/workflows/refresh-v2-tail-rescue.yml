@@ -19,11 +19,12 @@ jobs:
       - name: Gate one-shot refresh
         id: gate
         run: |
-          msg="$(git log -1 --pretty=%s)"
-          if [ "$msg" = "chore: bootstrap V2 tail-rescue receiver refresh" ]; then
-            echo "run=true" >> "$GITHUB_OUTPUT"
-          else
+          if [ -f v2/receiver/index.html ] &&
+             grep -q 'benchmark-log' v2/receiver/index.html &&
+             grep -q 'benchmark-line' v2/assets/receiver.js; then
             echo "run=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=true" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Download tested V2 build
