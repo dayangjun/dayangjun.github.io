@@ -1,0 +1,69 @@
+name: Refresh V2 receiver tail-rescue build
+
+on:
+  push:
+    branches:
+      - v2-receiver-tail-rescue
+
+permissions:
+  contents: write
+
+jobs:
+  refresh_receiver:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: v2-receiver-tail-rescue
+
+      - name: Gate one-shot refresh
+        id: gate
+        run: |
+          msg="$(git log -1 --pretty=%s)"
+          if [ "$msg" = "chore: bootstrap V2 tail-rescue receiver refresh" ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Download tested V2 build
+        if: steps.gate.outputs.run == 'true'
+        run: |
+          curl -fL 'https://sdmntprwestus3.oaiusercontent.com/files/00000000-db64-81fd-a800-a64151adcea5/raw?se=2026-09-18T13%3A14%3A50Z&sp=r&sv=2026-02-06&sr=b&scid=714acb0e-38fb-5ad2-8125-6fd45d9f6031&skoid=456594af-533f-44ef-9bdc-35ea2f9daee5&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-09-17T18%3A06%3A38Z&ske=2026-09-18T18%3A06%3A38Z&sks=b&skv=2026-02-06&sig=vqcTJTgJY7AHnaZ8Wl0JNNgV6GLnQ4bio7odi9Etfjs%3D' -o /tmp/v2.zip
+          rm -rf /tmp/v2dist
+          mkdir -p /tmp/v2dist
+          unzip -q /tmp/v2.zip -d /tmp/v2dist
+
+      - name: Refresh isolated receiver
+        if: steps.gate.outputs.run == 'true'
+        run: |
+          rm -rf v2
+          mkdir -p v2/receiver v2/assets
+          cp /tmp/v2dist/src/receiver/index.html v2/receiver/index.html
+          cp /tmp/v2dist/assets/receiver.js v2/assets/receiver.js
+          cp /tmp/v2dist/assets/receiver.css v2/assets/receiver.css
+          cp /tmp/v2dist/assets/modulepreload-polyfill.js v2/assets/modulepreload-polyfill.js
+
+          worker="$(find /tmp/v2dist/assets -maxdepth 1 -name 'decode.worker-*.js' -print -quit)"
+          test -n "$worker"
+          cp "$worker" v2/assets/decode.worker.js
+
+          sed -i 's#../../assets/receiver.js#../assets/receiver.js#g' v2/receiver/index.html
+          sed -i 's#../../assets/modulepreload-polyfill.js#../assets/modulepreload-polyfill.js#g' v2/receiver/index.html
+          sed -i 's#../../assets/receiver.css#../assets/receiver.css#g' v2/receiver/index.html
+          sed -E -i 's#decode\.worker-[A-Za-z0-9_-]+\.js#decode.worker.js#g' v2/assets/receiver.js
+          sed -E -i 's#raptorqr_raptorq_wasm_bg-[A-Za-z0-9_-]+\.wasm#../../assets/raptorqr_raptorq_wasm_bg.wasm#g' v2/assets/decode.worker.js
+          sed -E -i 's#zxing_reader-[A-Za-z0-9_-]+\.wasm#../../assets/zxing_reader.wasm#g' v2/assets/decode.worker.js
+
+          grep -q 'benchmark-log' v2/receiver/index.html
+          grep -q '95%' v2/assets/receiver.js
+          grep -q 'decode.worker.js' v2/assets/receiver.js
+
+      - name: Commit refreshed preview
+        if: steps.gate.outputs.run == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add v2
+          git commit -m "deploy: refresh V2 receiver with milestone telemetry"
+          git push origin HEAD:v2-receiver-tail-rescue
