@@ -1,0 +1,83 @@
+name: Import V2 receiver preview
+
+on:
+  push:
+    branches:
+      - v2-receiver-preview
+
+permissions:
+  contents: write
+
+jobs:
+  import:
+    if: startsWith(github.event.head_commit.message, 'chore: bootstrap V2 receiver import')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: v2-receiver-preview
+
+      - name: Download tested V2 build
+        run: |
+          curl -fL 'https://sdmntprwestus3.oaiusercontent.com/files/00000000-b0a0-81fd-a999-b3d91a829791/raw?se=2026-09-18T09%3A43%3A11Z&sp=r&sv=2026-02-06&sr=b&scid=d4f7947c-0e66-5fa2-96a7-893c5bf05614&skoid=456594af-533f-44ef-9bdc-35ea2f9daee5&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-09-18T05%3A32%3A37Z&ske=2026-09-19T05%3A32%3A37Z&sks=b&skv=2026-02-06&sig=6LR5z5YZbClbsjjz/CrrJWajG/IcsoxUI80YPcUMZyE%3D' -o /tmp/v2.zip
+          rm -rf /tmp/v2dist
+          mkdir -p /tmp/v2dist
+          unzip -q /tmp/v2.zip -d /tmp/v2dist
+
+      - name: Extract isolated receiver
+        run: |
+          rm -rf v2
+          mkdir -p v2/receiver v2/assets
+
+          cp /tmp/v2dist/src/receiver/index.html v2/receiver/index.html
+          cp /tmp/v2dist/assets/receiver.js v2/assets/receiver.js
+          cp /tmp/v2dist/assets/receiver.css v2/assets/receiver.css
+          cp /tmp/v2dist/assets/modulepreload-polyfill.js v2/assets/modulepreload-polyfill.js
+
+          worker="$(find /tmp/v2dist/assets -maxdepth 1 -name 'decode.worker-*.js' -print -quit)"
+          test -n "$worker"
+          cp "$worker" v2/assets/decode.worker.js
+
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          html = Path('v2/receiver/index.html')
+          s = html.read_text()
+          s = s.replace('../../assets/receiver.js', '../assets/receiver.js')
+          s = s.replace('../../assets/modulepreload-polyfill.js', '../assets/modulepreload-polyfill.js')
+          s = s.replace('../../assets/receiver.css', '../assets/receiver.css')
+          html.write_text(s)
+
+          receiver = Path('v2/assets/receiver.js')
+          s = receiver.read_text()
+          s = re.sub(r'decode\.worker-[A-Za-z0-9_-]+\.js', 'decode.worker.js', s)
+          receiver.write_text(s)
+
+          worker = Path('v2/assets/decode.worker.js')
+          s = worker.read_text()
+          s = re.sub(
+              r'raptorqr_raptorq_wasm_bg-[A-Za-z0-9_-]+\.wasm',
+              '../../assets/raptorqr_raptorq_wasm_bg.wasm',
+              s,
+          )
+          s = re.sub(
+              r'zxing_reader-[A-Za-z0-9_-]+\.wasm',
+              '../../assets/zxing_reader.wasm',
+              s,
+          )
+          worker.write_text(s)
+          PY
+
+          grep -q '../assets/receiver.js' v2/receiver/index.html
+          grep -q 'decode.worker.js' v2/assets/receiver.js
+          grep -q '../../assets/raptorqr_raptorq_wasm_bg.wasm' v2/assets/decode.worker.js
+          grep -q '../../assets/zxing_reader.wasm' v2/assets/decode.worker.js
+
+      - name: Commit preview files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add v2
+          git commit -m "deploy: add isolated V2 receiver preview"
+          git push origin HEAD:v2-receiver-preview
