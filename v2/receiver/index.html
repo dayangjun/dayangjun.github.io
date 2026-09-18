@@ -15,13 +15,19 @@
     </header>
 
     <div class="view-panel">
-      <video id="video-stream" playsinline muted></video>
+      <video id="video-stream" autoplay playsinline muted></video>
       <div class="scanner-frame">
         <div class="laser-line"></div>
       </div>
     </div>
 
     <div class="dashboard">
+      <div class="camera-controls" id="camera-controls" hidden>
+        <label for="camera-select">摄像头</label>
+        <select id="camera-select"></select>
+        <div class="camera-info" id="camera-info"></div>
+      </div>
+
       <button id="activate-camera" class="action-btn">开启相机扫码</button>
       
       <div class="progress-container">
