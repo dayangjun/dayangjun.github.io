@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>快传接收端</title>
+  <script type="module" crossorigin src="../assets/receiver.js"></script>
+  <link rel="modulepreload" crossorigin href="../assets/modulepreload-polyfill.js">
+  <link rel="stylesheet" crossorigin href="../assets/receiver.css">
+</head>
+<body>
+  <div class="mobile-container">
+    <header class="navbar">
+      <h2>快传接收端</h2>
+    </header>
+
+    <div class="view-panel">
+      <video id="video-stream" playsinline muted></video>
+      <div class="scanner-frame">
+        <div class="laser-line"></div>
+      </div>
+    </div>
+
+    <div class="dashboard">
+      <button id="activate-camera" class="action-btn">开启相机扫码</button>
+      
+      <div class="progress-container">
+        <div class="progress-bar-track">
+          <div class="progress-bar-fill" id="progress-fill"></div>
+        </div>
+        <div class="counter" id="counter-text">等待开启相机...</div>
+      </div>
+    </div>
+
+    <footer class="receiver-footer">
+      <span>基于 RaptorQR 开源协议实现 · 端到端离线传输</span>
+    </footer>
+  </div>
+
+</body>
+</html>
