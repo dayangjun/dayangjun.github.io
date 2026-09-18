@@ -56,7 +56,7 @@ jobs:
           sed -E -i 's#zxing_reader-[A-Za-z0-9_-]+\.wasm#../../assets/zxing_reader.wasm#g' v2/assets/decode.worker.js
 
           grep -q 'benchmark-log' v2/receiver/index.html
-          grep -q '95%' v2/assets/receiver.js
+          grep -q 'benchmark-line' v2/assets/receiver.js
           grep -q 'decode.worker.js' v2/assets/receiver.js
 
       - name: Commit refreshed preview
